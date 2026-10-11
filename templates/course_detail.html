@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} - E-Learning Platform{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-5xl mx-auto">
+
+    <!-- Course Header Banner -->
+    <div class="bg-dark-900 text-white rounded-xl p-8 shadow-md">
+        <div class="flex items-center space-x-2 text-xs text-sky-400 font-semibold mb-2">
+            <span>{{ course.level }}</span>
+            <span>&bull;</span>
+            <span>By {{ course.instructor_name }}</span>
+        </div>
+        <h1 class="text-3xl font-bold text-white mb-3">{{ course.title }}</h1>
+        <p class="text-slate-300 text-sm leading-relaxed max-w-3xl">{{ course.description }}</p>
+    </div>
+
+    <!-- Course Content Accordion / Modules -->
+    <div class="space-y-6">
+        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-sky-600"></i> Course Curriculum & Modules
+        </h2>
+
+        {% if modules_data %}
+            {% for mod_item in modules_data %}
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 text-base">{{ mod_item.module.title }}</h3>
+                        <span class="text-xs text-slate-500 font-medium">{{ mod_item.lessons|length }} Lessons</span>
+                    </div>
+
+                    <div class="divide-y divide-slate-100">
+                        {% for les_item in mod_item.lessons %}
+                            <div class="p-5 space-y-4">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center text-sm font-semibold">
+                                            <i class="fa-solid fa-play"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-slate-900 text-base">{{ les_item.lesson.title }}</h4>
+                                            <p class="text-xs text-slate-500">{{ les_item.lesson.duration_minutes }} minutes video lesson</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Embedded Video -->
+                                {% if les_item.lesson.video_url %}
+                                    <div class="aspect-video bg-slate-900 rounded-lg overflow-hidden max-w-2xl">
+                                        <iframe class="w-full h-full" src="{{ les_item.lesson.video_url }}" title="{{ les_item.lesson.title }}" frameborder="0" allowfullscreen></iframe>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Assignments in this lesson -->
+                                {% if les_item.assignments %}
+                                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
+                                        <h5 class="font-semibold text-amber-900 text-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-file-lines text-amber-600"></i> Graded Assignment
+                                        </h5>
+                                        {% for assign in les_item.assignments %}
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+                                                <div>
+                                                    <p class="font-medium text-slate-900">{{ assign.title }}</p>
+                                                    <p class="text-xs text-slate-600">{{ assign.instructions }}</p>
+                                                </div>
+
+                                                {% if session.role == 'student' %}
+                                                    {% set sub = user_submissions.get(assign.assignment_id) %}
+                                                    {% if sub %}
+                                                        <span class="bg-emerald-100 text-emerald-800 text-xs px-3 py-1.5 rounded font-semibold whitespace-nowrap">
+                                                            &check; Submitted (Score: {{ sub.score }}/100)
+                                                        </span>
+                                                    {% else %}
+                                                        <form method="POST" action="{{ url_for('student.submit_assignment', assignment_id=assign.assignment_id) }}" class="flex space-x-2">
+                                                            <input type="text" name="file_url" placeholder="Solution URL / SQL Code" required class="px-2.5 py-1 border text-xs rounded">
+                                                            <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded shadow-sm whitespace-nowrap">
+                                                                Submit Task
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <!-- Quizzes in this lesson -->
+                                {% if les_item.quizzes %}
+                                    <div class="bg-sky-50 border border-sky-200 rounded-lg p-4 space-y-3">
+                                        <h5 class="font-semibold text-sky-900 text-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-circle-question text-sky-600"></i> Knowledge Check Quiz
+                                        </h5>
+                                        {% for quiz in les_item.quizzes %}
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+                                                <div>
+                                                    <p class="font-medium text-slate-900">{{ quiz.title }}</p>
+                                                    <p class="text-xs text-slate-600">Time Limit: {{ quiz.time_limit_minutes }} mins | Passing Score: {{ quiz.passing_score }}%</p>
+                                                </div>
+
+                                                {% if session.role == 'student' %}
+                                                    {% set att = user_attempts.get(quiz.quiz_id) %}
+                                                    {% if att %}
+                                                        <span class="bg-emerald-100 text-emerald-800 text-xs px-3 py-1.5 rounded font-semibold whitespace-nowrap">
+                                                            &check; Completed (Score: {{ att.score }}%)
+                                                        </span>
+                                                    {% else %}
+                                                        <form method="POST" action="{{ url_for('student.attempt_quiz', quiz_id=quiz.quiz_id) }}" class="inline-block">
+                                                            <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold px-3 py-1.5 rounded shadow-sm whitespace-nowrap">
+                                                                Take Quiz Now
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-slate-500 italic">No modules added to this course yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

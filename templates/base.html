@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-Learning Platform{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        dark: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-dark-900 text-white border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold text-sky-400">
+                    <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                    <span>LearnPulse</span>
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                {% if session.user_id %}
+                    <a href="{{ url_for('student.course_catalog') }}" class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-md hover:bg-slate-800">
+                        <i class="fa-solid fa-book-open mr-1"></i> Browse Courses
+                    </a>
+                    
+                    <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 text-sm">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        <span class="font-medium text-slate-200">{{ session.name }}</span>
+                        <span class="text-xs uppercase bg-sky-900 text-sky-300 px-2 py-0.5 rounded font-semibold">{{ session.role }}</span>
+                    </div>
+
+                    <a href="{{ url_for('auth.logout') }}" class="text-sm text-slate-400 hover:text-rose-400 px-2 py-1 transition">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="text-sm font-medium text-slate-300 hover:text-white px-3 py-2">Log In</a>
+                    <a href="{{ url_for('auth.register') }}" class="text-sm font-medium bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg shadow-sm transition">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Flash Messages / Toast Alerts -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-3 rounded-lg text-sm flex items-center justify-between border shadow-sm
+                        {% if category == 'error' %} bg-rose-50 border-rose-200 text-rose-800
+                        {% elif category == 'success' %} bg-emerald-50 border-emerald-200 text-emerald-800
+                        {% else %} bg-sky-50 border-sky-200 text-sky-800 {% endif %}">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid {% if category == 'error' %}fa-circle-xmark{% elif category == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Body -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-900 border-t border-slate-800 text-slate-400 text-sm py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>&copy; 2026 E-Learning Platform Database Application. Built with Flask, SQL & Tailwind CSS.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
